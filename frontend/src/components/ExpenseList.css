@@ -1,0 +1,50 @@
+/* Expense List - Clean & Minimal */
+.expense-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.expense-list-empty {
+  text-align: center;
+  padding: 48px 20px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+}
+
+.expense-list-empty .empty-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.expense-list-empty h3 {
+  color: #1a1a1a;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.expense-list-empty p {
+  color: #666;
+  font-size: 13px;
+}
+
+.expense-group {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.expense-date {
+  background: #fafafa;
+  padding: 10px 16px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-transform: capitalize;
+  border-bottom: 1px solid #e5e5e5;
+}

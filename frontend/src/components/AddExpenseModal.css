@@ -1,0 +1,168 @@
+/* Add Expense Modal - Clean & Minimal */
+.add-expense-modal {
+  background: #fff;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: #666;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-close:hover {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+.add-expense-modal form {
+  padding: 20px;
+}
+
+.add-expense-modal .form-group {
+  margin-bottom: 16px;
+}
+
+.add-expense-modal .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #1a1a1a;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.add-expense-modal .form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.add-expense-modal .form-group input:focus {
+  outline: none;
+  border-color: #1a1a1a;
+}
+
+.category-hints {
+  background: #fafafa;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #e5e5e5;
+  margin-bottom: 16px;
+}
+
+.category-hints p {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.category-pills span {
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-pills span:hover {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.add-expense-modal .error-message {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 10px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  border: 1px solid #fecaca;
+}
+
+.add-expense-modal .modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.add-expense-modal .btn-secondary {
+  flex: 1;
+  padding: 10px;
+  background: transparent;
+  color: #666;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-expense-modal .btn-secondary:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.add-expense-modal .btn-primary {
+  flex: 1;
+  padding: 10px;
+  background: #1a1a1a;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.add-expense-modal .btn-primary:hover:not(:disabled) {
+  background: #333;
+}
+
+.add-expense-modal .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .add-expense-modal {
+    margin: 0 16px;
+  }
+}
