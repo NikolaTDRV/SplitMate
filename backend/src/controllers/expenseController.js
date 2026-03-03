@@ -29,6 +29,26 @@ const addExpense = async (req, res) => {
   }
 };
 
+// Récupérer toutes les dépenses d'un groupe
+const getExpenses = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    
+    const result = await pool.query(
+      `SELECT e.*, u.name as paid_by_name 
+       FROM expenses e 
+       LEFT JOIN users u ON e.paid_by = u.id 
+       WHERE e.group_id = $1 
+       ORDER BY e.created_at DESC`,
+      [groupId]
+    );
+    
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 const getBalances = async (req, res) => {
   try {
     const { groupId } = req.params;
@@ -40,4 +60,42 @@ const getBalances = async (req, res) => {
   }
 };
 
-module.exports = { addExpense, getBalances };
+// Supprimer une dépense
+const deleteExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    // Vérifier que la dépense existe
+    const expense = await pool.query(
+      'SELECT * FROM expenses WHERE id = $1',
+      [id]
+    );
+
+    if (expense.rows.length === 0) {
+      return res.status(404).json({ error: 'Dépense non trouvée' });
+    }
+
+    // Vérifier les permissions : admin peut tout supprimer, member seulement ses dépenses
+    if (userRole !== 'admin' && expense.rows[0].paid_by !== userId) {
+      return res.status(403).json({ error: 'Vous ne pouvez supprimer que vos propres dépenses' });
+    }
+
+    // Supprimer la dépense
+    await pool.query('DELETE FROM expenses WHERE id = $1', [id]);
+
+    // Notification temps réel
+    const io = req.app.get('socketio');
+    io.to(`group_${expense.rows[0].group_id}`).emit('expense_deleted', {
+      expenseId: id,
+      deletedBy: userId
+    });
+
+    res.json({ message: 'Dépense supprimée avec succès' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { addExpense, getExpenses, getBalances, deleteExpense };

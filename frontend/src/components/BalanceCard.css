@@ -1,0 +1,99 @@
+/* Balance Card - Clean & Minimal */
+.balance-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.balance-transfer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.balance-person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 60px;
+}
+
+.person-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 12px;
+  color: #fff;
+  background: #1a1a1a;
+}
+
+.debtor .person-avatar {
+  background: #666;
+}
+
+.creditor .person-avatar {
+  background: #1a1a1a;
+}
+
+.person-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1a1a1a;
+  text-align: center;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.balance-arrow-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.balance-arrow {
+  font-size: 1.1rem;
+  color: #999;
+}
+
+.balance-amount {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.balance-description {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.balance-description strong {
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 360px) {
+  .balance-transfer {
+    flex-direction: column;
+  }
+  
+  .balance-arrow {
+    transform: rotate(90deg);
+  }
+}
