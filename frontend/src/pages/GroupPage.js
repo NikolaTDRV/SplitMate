@@ -58,7 +58,7 @@ const GroupPage = () => {
     return () => {
       socketService.removeAllListeners();
     };
-  }, [id]);
+  }, [id, showToast]);
 
   useEffect(() => {
     fetchGroupData();
