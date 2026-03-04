@@ -28,8 +28,11 @@ export const ToastProvider = ({ children }) => {
   const info = useCallback((message) => addToast(message, 'info'), [addToast]);
   const warning = useCallback((message) => addToast(message, 'warning'), [addToast]);
 
+  // Alias pour compatibilité avec showToast(message, type)
+  const showToast = useCallback((message, type = 'info') => addToast(message, type), [addToast]);
+
   return (
-    <ToastContext.Provider value={{ success, error, info, warning }}>
+    <ToastContext.Provider value={{ success, error, info, warning, showToast }}>
       {children}
       <div className="toast-container">
         {toasts.map((toast) => (

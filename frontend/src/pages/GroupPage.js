@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { groupAPI, expenseAPI } from '../services/api';
-import socketService from '../services/socket';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../components/Toast';
+import { groupAPI, expenseAPI } from '../services/api'; // Fonctions pour appeler l'API
+import socketService from '../services/socket'; // Service pour gérer la connexion WebSocket
+import { useAuth } from '../context/AuthContext'; // Hook pour récupérer l'utilisateur connecté
+import { useToast } from '../components/Toast'; // Hook pour afficher des notifications
 import Navbar from '../components/Navbar';
 import ExpenseList from '../components/ExpenseList';
 import BalanceCard from '../components/BalanceCard';
@@ -12,79 +12,91 @@ import AddMemberModal from '../components/AddMemberModal';
 import './GroupPage.css';
 
 const GroupPage = () => {
-  const { id } = useParams();
-  const { user } = useAuth();
-  const { showToast } = useToast();
+  // --- HOOKS ET ÉTATS ---
+  const { id } = useParams(); // Récupère l'ID du groupe depuis l'URL (ex: /group/123)
+  const { user } = useAuth(); // Informations sur l'utilisateur actuellement connecté
+  const { showToast } = useToast(); // Fonction pour afficher les notifications
+  
+  // États pour stocker les données du groupe
   const [group, setGroup] = useState(null);
   const [members, setMembers] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [balances, setBalances] = useState([]);
+  
+  // États pour la gestion de l'UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showAddExpense, setShowAddExpense] = useState(false);
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [activeTab, setActiveTab] = useState('expenses');
+  const [showAddExpense, setShowAddExpense] = useState(false); // Gère la visibilité de la modale d'ajout de dépense
+  const [showAddMember, setShowAddMember] = useState(false); // Gère la visibilité de la modale d'ajout de membre
+  const [activeTab, setActiveTab] = useState('expenses'); // Gère l'onglet actif ('dépenses' ou 'équilibres')
   
-  // Filtres
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterPaidBy, setFilterPaidBy] = useState('all');
+  // États pour les filtres
+  const [searchTerm, setSearchTerm] = useState(''); // Pour la recherche par titre
+  const [filterPaidBy, setFilterPaidBy] = useState('all'); // Pour filtrer par membre
 
-  // WebSocket connection
+  // --- EFFETS (useEffect) ---
+
+  // 1. Connexion et écoute des événements WebSocket
   useEffect(() => {
-    socketService.connect();
-    socketService.joinGroup(id);
+    socketService.connect(); // Établit la connexion au serveur WebSocket
+    socketService.joinGroup(id); // Rejoint la "salle" correspondant à ce groupe pour recevoir les bons messages
 
-    // Notifications temps réel
+    // Définit les actions à effectuer lors de la réception d'événements du serveur
     socketService.onNewExpense((data) => {
-      showToast(data.message, 'success');
-      fetchGroupData();
+      if (showToast) showToast(data.message, 'success'); // Affiche une notif
+      fetchGroupData(); // Recharge les données pour afficher la nouvelle dépense
     });
 
     socketService.onExpenseDeleted(() => {
-      showToast('Une dépense a été supprimée', 'info');
+      if (showToast) showToast('Une dépense a été supprimée', 'info');
       fetchGroupData();
     });
 
     socketService.onMemberJoined((data) => {
-      showToast(data.message, 'success');
+      if (showToast) showToast(data.message, 'success');
       fetchGroupData();
     });
 
     socketService.onMemberRemoved(() => {
-      showToast('Un membre a été retiré du groupe', 'info');
+      if (showToast) showToast('Un membre a été retiré du groupe', 'info');
       fetchGroupData();
     });
 
+    // Fonction de nettoyage : s'exécute lorsque le composant est "démonté" (quand on quitte la page)
     return () => {
-      socketService.removeAllListeners();
+      socketService.removeAllListeners(); // Supprime les écouteurs pour éviter les fuites de mémoire
     };
-  }, [id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]); // Se ré-exécute si l'ID du groupe change
 
+  // 2. Chargement initial des données du groupe
   useEffect(() => {
     fetchGroupData();
   }, [id]);
 
+  // --- FONCTIONS ---
+
+  // Fonction pour charger toutes les données de la page (détails, dépenses, équilibres)
   const fetchGroupData = async () => {
     try {
       setLoading(true);
+      // Lance plusieurs requêtes API en parallèle pour plus d'efficacité
       const [groupRes, expensesRes, balancesRes] = await Promise.all([
         groupAPI.getById(id),
         expenseAPI.getAll(id),
         expenseAPI.getBalances(id)
       ]);
       
+      // Met à jour les états avec les données reçues
       setGroup(groupRes.data);
       setMembers(groupRes.data.members || []);
       setExpenses(expensesRes.data || []);
-      
-      // Use transfers from the new balance API
-      const balancesData = balancesRes.data || {};
-      setBalances(balancesData.transfers || []);
+      setBalances(balancesRes.data?.transfers || []);
     } catch (err) {
       setError('Erreur lors du chargement du groupe');
       console.error(err);
     } finally {
-      setLoading(false);
+      setLoading(false); // Arrête l'indicateur de chargement, que la requête ait réussi ou non
     }
   };
 
@@ -98,16 +110,21 @@ const GroupPage = () => {
     fetchGroupData();
   };
 
+  // --- LOGIQUE DE RENDU ---
+
+  // Calcule les permissions de l'utilisateur (propriétaire ou admin)
   const isOwner = group?.owner_id === user?.id;
   const isAdmin = user?.role === 'admin';
 
-  // Filtrer les dépenses
-  const filteredExpenses = expenses.filter(expense => {
+  // Applique les filtres sur la liste des dépenses.
+  // `useMemo` est utilisé pour optimiser : le filtrage n'est ré-exécuté que si les dépenses ou les filtres changent.
+  const filteredExpenses = useMemo(() => expenses.filter(expense => {
     const matchesSearch = expense.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPaidBy = filterPaidBy === 'all' || expense.paid_by === parseInt(filterPaidBy);
     return matchesSearch && matchesPaidBy;
-  });
+  }), [expenses, searchTerm, filterPaidBy]);
 
+  // Si la page charge, on affiche un spinner
   if (loading) {
     return (
       <div className="dashboard-layout">
@@ -122,6 +139,7 @@ const GroupPage = () => {
     );
   }
 
+  // Rendu principal du composant
   return (
     <div className="dashboard-layout">
       <Navbar />
@@ -171,7 +189,7 @@ const GroupPage = () => {
 
         {error && <div className="error-banner">{error}</div>}
 
-        {/* Tabs */}
+        {/* Onglets pour naviguer entre Dépenses et Équilibres */}
         <div className="tabs">
           <button 
             className={`tab ${activeTab === 'expenses' ? 'active' : ''}`}
@@ -187,11 +205,11 @@ const GroupPage = () => {
           </button>
         </div>
 
-        {/* Tab Content */}
+        {/* Contenu de l'onglet actif */}
         <div className="tab-content">
           {activeTab === 'expenses' ? (
             <>
-              {/* Filtres */}
+              {/* Section des filtres */}
               <div className="filters-section">
                 <input
                   type="text"
@@ -224,7 +242,7 @@ const GroupPage = () => {
             <div className="balances-grid">
               {balances.length === 0 ? (
                 <div className="empty-balances">
-                  <p>Aucune balance pour le moment</p>
+                  <p>Aucun équilibre à calculer pour le moment.</p>
                 </div>
               ) : (
                 balances.map((balance, index) => (
@@ -235,7 +253,7 @@ const GroupPage = () => {
           )}
         </div>
 
-        {/* Modal d'ajout de dépense */}
+        {/* Modale pour ajouter une dépense (affichée conditionnellement) */}
         {showAddExpense && (
           <AddExpenseModal
             groupId={id}
@@ -244,7 +262,7 @@ const GroupPage = () => {
           />
         )}
 
-        {/* Modal d'ajout de membre */}
+        {/* Modale pour ajouter un membre (affichée conditionnellement) */}
         {showAddMember && (
           <AddMemberModal
             groupId={id}

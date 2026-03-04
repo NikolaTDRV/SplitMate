@@ -3,7 +3,7 @@
   background: #fff;
   border-radius: 8px;
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
   overflow: hidden;
 }
 
@@ -62,6 +62,10 @@
   border-radius: 4px;
   font-size: 14px;
   transition: border-color 0.2s;
+  color: #1a1a1a !important;
+  background-color: #fff !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  opacity: 1;
 }
 
 .add-expense-modal .form-group input:focus {
@@ -158,6 +162,49 @@
 .add-expense-modal .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Ligne montant + devise */
+.amount-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.amount-row input {
+  flex: 2;
+  min-width: 120px;
+  width: auto !important;
+  color: #1a1a1a !important;
+  background: #fff !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  padding: 10px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.amount-row input[type="number"] {
+  color: #1a1a1a !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+}
+
+.currency-select {
+  flex: 1;
+  min-width: 90px;
+  max-width: 100px;
+  padding: 10px 8px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.currency-select:focus {
+  outline: none;
+  border-color: #1a1a1a;
 }
 
 /* Responsive */

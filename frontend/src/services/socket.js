@@ -35,14 +35,14 @@ class SocketService {
 
   joinGroup(groupId) {
     if (this.socket) {
-      this.socket.emit('join_coloc', groupId);
+      this.socket.emit('join_group', groupId);
       console.log(`📢 Rejoint le groupe ${groupId}`);
     }
   }
 
   leaveGroup(groupId) {
     if (this.socket) {
-      this.socket.emit('leave_coloc', groupId);
+      this.socket.emit('leave_group', groupId);
     }
   }
 

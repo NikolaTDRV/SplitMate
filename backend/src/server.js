@@ -1,77 +1,84 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const http = require('http'); 
-const { Server } = require('socket.io'); 
-const pool = require('./config/db');
+// --- IMPORTATIONS ESSENTIELLES ---
+const express = require('express'); // Framework pour construire le serveur
+const cors = require('cors'); // Middleware pour autoriser les requêtes cross-origin (entre le frontend et le backend)
+const helmet = require('helmet'); // Middleware pour sécuriser les en-têtes HTTP (protection OWASP)
+const rateLimit = require('express-rate-limit'); // Middleware pour limiter le nombre de requêtes (protection OWASP)
+const http = require('http'); // Module natif de Node.js pour créer un serveur HTTP
+const { Server } = require('socket.io'); // Classe pour gérer les WebSockets
+const pool = require('./config/db'); // Notre module de connexion à la base de données PostgreSQL
+
+// --- IMPORTATION DES ROUTES ---
 const authRoutes = require('./routes/authRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
-const groupRoutes = require('./routes/groupRoutes'); // Import du collègue
-require('dotenv').config();
+const groupRoutes = require('./routes/groupRoutes');
+require('dotenv').config(); // Charge les variables d'environnement du fichier .env
 
-const app = express();
-const server = http.createServer(app); 
-const io = new Server(server, { cors: { origin: "*" } }); 
+// --- INITIALISATION ---
+const app = express(); // Crée une instance de l'application Express
+const server = http.createServer(app); // Crée un serveur HTTP basé sur l'app Express (nécessaire pour Socket.IO)
+const io = new Server(server, { cors: { origin: "*" } }); // Initialise Socket.IO et l'attache au serveur HTTP
 
-// --- RATE LIMITING (Sécurité OWASP) ---
+// --- MIDDLEWARES DE SÉCURITÉ (OWASP) ---
+
+// 1. Rate Limiter Global : Limite toutes les IPs à 100 requêtes par 15 minutes
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requêtes max par IP
+  windowMs: 15 * 60 * 1000, // Fenêtre de temps : 15 minutes
+  max: 100, // Nombre maximum de requêtes dans la fenêtre de temps
   message: { error: 'Trop de requêtes, veuillez réessayer plus tard.' },
-  standardHeaders: true,
-  legacyHeaders: false,
+  standardHeaders: true, // Active les en-têtes standards `RateLimit-*`
+  legacyHeaders: false, // Désactive les anciens en-têtes `X-RateLimit-*`
 });
 
+// 2. Rate Limiter pour l'Authentification : Plus strict, 10 tentatives par heure
 const authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 heure
-  max: 10, // 10 tentatives de login max
+  max: 10, // 10 tentatives max
   message: { error: 'Trop de tentatives de connexion, veuillez réessayer dans 1 heure.' },
 });
 
-// --- MIDDLEWARES (Sécurité OWASP) ---
-app.use(helmet()); 
-app.use(cors());
-app.use(express.json());
-app.use(limiter); // Rate limit global 
+// --- APPLICATION DES MIDDLEWARES ---
+app.use(helmet()); // Applique les en-têtes de sécurité
+app.use(cors()); // Autorise les requêtes de n'importe quelle origine
+app.use(express.json()); // Permet au serveur de comprendre le JSON envoyé dans les corps de requête (req.body)
+app.use(limiter); // Applique le rate limiter global à toutes les routes
 
-// Rendre 'io' accessible dans les contrôleurs
+// --- GESTION DE SOCKET.IO ---
+// Rend l'instance 'io' accessible dans toute l'application (via req.app.get('socketio'))
+// C'est crucial pour pouvoir émettre des événements depuis les contrôleurs.
 app.set('socketio', io);
 
-// --- ROUTES ---
-app.use('/api/auth', authLimiter, authRoutes); // Rate limit strict sur auth
+// --- DÉFINITION DES ROUTES PRINCIPALES ---
+// Applique le `authLimiter` uniquement aux routes d'authentification
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/expenses', expenseRoutes);
-app.use('/api/groups', groupRoutes); // Route du collègue ajoutée ici
+app.use('/api/groups', groupRoutes);
 
-// --- LOGIQUE SOCKET.IO ---
+// --- LOGIQUE WEBSOCKET ---
+// Se déclenche chaque fois qu'un nouveau client se connecte au serveur WebSocket
 io.on('connection', (socket) => {
-  console.log('⚡ Un membre est en ligne');
-  socket.on('join_coloc', (groupId) => {
-    socket.join(`group_${groupId}`);
-    console.log(`User a rejoint le groupe : ${groupId}`);
+  console.log('⚡ Un membre est en ligne via WebSocket');
+
+  // Écoute l'événement 'join_group' émis par un client"
+  socket.on('join_group', (groupId) => {
+    socket.join(`group_${groupId}`); // Fait rejoindre au client une "salle" spécifique à son groupe
+    console.log(`Un utilisateur a rejoint la salle du groupe : ${groupId}`);
   });
+
+  // Se déclenche lorsque le client se déconnecte
   socket.on('disconnect', () => {
     console.log('🔥 Un membre s\'est déconnecté');
   });
 });
 
-// --- ROUTES DE TEST ---
+// --- ROUTE DE TEST SIMPLE ---
 app.get('/', (req, res) => {
     res.send("🚀 Le serveur SplitMate est en ligne et opérationnel !");
 });
 
-app.get('/test', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT NOW()');
-    res.json({ message: "API SplitMate connectée !", time: result.rows[0] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // --- DÉMARRAGE DU SERVEUR ---
 const PORT = process.env.PORT || 5000;
-// ON UTILISE SERVER.LISTEN (Indispensable pour tes WebSockets)
+// On utilise `server.listen` au lieu de `app.listen` pour démarrer le serveur HTTP
+// qui contient à la fois l'application Express ET le serveur Socket.IO.
 server.listen(PORT, () => {
   console.log(`🚀 Serveur et WebSockets lancés sur : http://localhost:${PORT}`);
 });

@@ -6,7 +6,7 @@ const AddExpenseModal = ({ groupId, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     title: '',
     amount: '',
-    paid_by: '',
+    currency: 'EUR', // Devise par défaut
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +38,8 @@ const AddExpenseModal = ({ groupId, onClose, onSuccess }) => {
       await expenseAPI.create({
         groupId: parseInt(groupId),
         title: formData.title,
-        amount: parseFloat(formData.amount)
+        amount: parseFloat(formData.amount),
+        currency: formData.currency // Envoie la devise sélectionnée
       });
       onSuccess?.();
     } catch (err) {
@@ -74,19 +75,36 @@ const AddExpenseModal = ({ groupId, onClose, onSuccess }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="amount">Montant (€)</label>
-            <input
-              type="number"
-              id="amount"
-              name="amount"
-              value={formData.amount}
-              onChange={handleChange}
-              placeholder="0.00"
-              step="0.01"
-              min="0.01"
-              required
-              disabled={loading}
-            />
+            <label htmlFor="amount">Montant</label>
+            <div className="amount-row">
+              <input
+                type="number"
+                id="amount"
+                name="amount"
+                value={formData.amount}
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                min="0.01"
+                required
+                disabled={loading}
+              />
+              <select
+                id="currency"
+                name="currency"
+                value={formData.currency}
+                onChange={handleChange}
+                disabled={loading}
+                className="currency-select"
+              >
+                <option value="EUR">€ EUR</option>
+                <option value="USD">$ USD</option>
+                <option value="GBP">£ GBP</option>
+                <option value="CHF">CHF</option>
+                <option value="CAD">$ CAD</option>
+                <option value="JPY">¥ JPY</option>
+              </select>
+            </div>
           </div>
 
           <div className="category-hints">
